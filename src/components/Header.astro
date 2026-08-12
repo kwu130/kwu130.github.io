@@ -1,0 +1,40 @@
+---
+import { SITE } from "../lib/site";
+---
+
+<header class="site-header">
+  <div class="shell header-inner">
+    <a class="wordmark" href="/" aria-label={`${SITE.title} 首页`}>
+      <span>Wukai’s</span>
+      <strong>Lab</strong>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">文章</a>
+      <a href="/tags/">标签</a>
+      <a href="/search/" title="搜索文章，快捷键 /">搜索 <kbd>/</kbd></a>
+      <a href="/rss.xml">RSS</a>
+      <a href={SITE.github} target="_blank" rel="noreferrer">GitHub</a>
+      <button class="theme-toggle" type="button" aria-label="切换深浅色主题" title="切换深浅色主题">
+        <span aria-hidden="true">◐</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const themeButton = document.querySelector<HTMLButtonElement>(".theme-toggle");
+  const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+  themeButton?.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("wukai-theme", next);
+    themeMeta?.setAttribute("content", next === "dark" ? "#171b1a" : "#f3f0e8");
+
+    const frame = document.querySelector<HTMLIFrameElement>(".utterances-frame");
+    frame?.contentWindow?.postMessage(
+      { type: "set-theme", theme: next === "dark" ? "github-dark" : "github-light" },
+      "https://utteranc.es"
+    );
+  });
+</script>
