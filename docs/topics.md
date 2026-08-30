@@ -10,7 +10,13 @@
 (topic-cuda)=
 ## CUDA
 
+- {doc}`posts/cuda-shared-memory-bank-conflicts`
 - {doc}`posts/cuda-device-long-double`
+
+(topic-performance-optimization)=
+## 性能优化
+
+- {doc}`posts/cuda-shared-memory-bank-conflicts`
 
 (topic-debugging)=
 ## 调试

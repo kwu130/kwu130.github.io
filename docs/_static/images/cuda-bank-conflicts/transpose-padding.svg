@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+  <title id="title">矩阵转置中的 bank conflict 与 Padding</title>
+  <desc id="desc">对比 32 列 tile 的列访问全部落在同一 bank，以及增加一列后各行分散到不同 bank。</desc>
+  <defs>
+    <style>
+      .title { font: 700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .heading { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .label { font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334e68; }
+      .mono { font: 15px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #486581; }
+      .cell { fill: #f5f8fa; stroke: #9fb3c8; stroke-width: 1.5; }
+      .bad { fill: #ffe8e6; stroke: #d64545; stroke-width: 2; }
+      .good1 { fill: #dff4ed; stroke: #2b7a78; stroke-width: 2; }
+      .good2 { fill: #e8f1f5; stroke: #4c7894; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect width="1200" height="690" fill="#fbfcfd"/>
+  <text x="600" y="48" text-anchor="middle" class="title">矩阵转置：列访问如何映射到 bank</text>
+
+  <g transform="translate(55 88)">
+    <rect width="500" height="540" rx="18" fill="#ffffff" stroke="#cbd5df"/>
+    <text x="250" y="42" text-anchor="middle" class="heading">tile[32][32]：32-way conflict</text>
+    <text x="250" y="72" text-anchor="middle" class="mono">bank = (row × 32 + col) mod 32</text>
+    <text x="74" y="112" class="label">行</text><text x="192" y="112" class="label">固定列 col = 0</text><text x="366" y="112" class="label">Bank</text>
+    <g transform="translate(55 128)">
+      <rect x="0" y="0" width="75" height="38" rx="6" class="cell"/><text x="37" y="25" text-anchor="middle" class="label">0</text>
+      <rect x="115" y="0" width="125" height="38" rx="6" class="bad"/><text x="177" y="25" text-anchor="middle" class="mono">tile[0][0]</text>
+      <rect x="315" y="0" width="75" height="38" rx="6" class="bad"/><text x="352" y="25" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="48" width="75" height="38" rx="6" class="cell"/><text x="37" y="73" text-anchor="middle" class="label">1</text>
+      <rect x="115" y="48" width="125" height="38" rx="6" class="bad"/><text x="177" y="73" text-anchor="middle" class="mono">tile[1][0]</text>
+      <rect x="315" y="48" width="75" height="38" rx="6" class="bad"/><text x="352" y="73" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="96" width="75" height="38" rx="6" class="cell"/><text x="37" y="121" text-anchor="middle" class="label">2</text>
+      <rect x="115" y="96" width="125" height="38" rx="6" class="bad"/><text x="177" y="121" text-anchor="middle" class="mono">tile[2][0]</text>
+      <rect x="315" y="96" width="75" height="38" rx="6" class="bad"/><text x="352" y="121" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="144" width="75" height="38" rx="6" class="cell"/><text x="37" y="169" text-anchor="middle" class="label">3</text>
+      <rect x="115" y="144" width="125" height="38" rx="6" class="bad"/><text x="177" y="169" text-anchor="middle" class="mono">tile[3][0]</text>
+      <rect x="315" y="144" width="75" height="38" rx="6" class="bad"/><text x="352" y="169" text-anchor="middle" class="label">0</text>
+      <text x="37" y="222" text-anchor="middle" class="heading">⋮</text><text x="177" y="222" text-anchor="middle" class="heading">⋮</text><text x="352" y="222" text-anchor="middle" class="heading">⋮</text>
+      <rect x="0" y="240" width="75" height="38" rx="6" class="cell"/><text x="37" y="265" text-anchor="middle" class="label">31</text>
+      <rect x="115" y="240" width="125" height="38" rx="6" class="bad"/><text x="177" y="265" text-anchor="middle" class="mono">tile[31][0]</text>
+      <rect x="315" y="240" width="75" height="38" rx="6" class="bad"/><text x="352" y="265" text-anchor="middle" class="label">0</text>
+    </g>
+    <rect x="55" y="450" width="390" height="58" rx="10" fill="#fff0ef"/>
+    <text x="250" y="476" text-anchor="middle" class="heading" fill="#a93636">32 个不同 word → 同一个 bank</text>
+    <text x="250" y="498" text-anchor="middle" class="label">请求需要拆分处理</text>
+  </g>
+
+  <g transform="translate(645 88)">
+    <rect width="500" height="540" rx="18" fill="#ffffff" stroke="#cbd5df"/>
+    <text x="250" y="42" text-anchor="middle" class="heading">tile[32][33]：Padding 后无冲突</text>
+    <text x="250" y="72" text-anchor="middle" class="mono">bank = (row × 33 + col) mod 32</text>
+    <text x="74" y="112" class="label">行</text><text x="192" y="112" class="label">固定列 col = 0</text><text x="366" y="112" class="label">Bank</text>
+    <g transform="translate(55 128)">
+      <rect x="0" y="0" width="75" height="38" rx="6" class="cell"/><text x="37" y="25" text-anchor="middle" class="label">0</text>
+      <rect x="115" y="0" width="125" height="38" rx="6" class="good1"/><text x="177" y="25" text-anchor="middle" class="mono">tile[0][0]</text>
+      <rect x="315" y="0" width="75" height="38" rx="6" class="good1"/><text x="352" y="25" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="48" width="75" height="38" rx="6" class="cell"/><text x="37" y="73" text-anchor="middle" class="label">1</text>
+      <rect x="115" y="48" width="125" height="38" rx="6" class="good2"/><text x="177" y="73" text-anchor="middle" class="mono">tile[1][0]</text>
+      <rect x="315" y="48" width="75" height="38" rx="6" class="good2"/><text x="352" y="73" text-anchor="middle" class="label">1</text>
+      <rect x="0" y="96" width="75" height="38" rx="6" class="cell"/><text x="37" y="121" text-anchor="middle" class="label">2</text>
+      <rect x="115" y="96" width="125" height="38" rx="6" class="good1"/><text x="177" y="121" text-anchor="middle" class="mono">tile[2][0]</text>
+      <rect x="315" y="96" width="75" height="38" rx="6" class="good1"/><text x="352" y="121" text-anchor="middle" class="label">2</text>
+      <rect x="0" y="144" width="75" height="38" rx="6" class="cell"/><text x="37" y="169" text-anchor="middle" class="label">3</text>
+      <rect x="115" y="144" width="125" height="38" rx="6" class="good2"/><text x="177" y="169" text-anchor="middle" class="mono">tile[3][0]</text>
+      <rect x="315" y="144" width="75" height="38" rx="6" class="good2"/><text x="352" y="169" text-anchor="middle" class="label">3</text>
+      <text x="37" y="222" text-anchor="middle" class="heading">⋮</text><text x="177" y="222" text-anchor="middle" class="heading">⋮</text><text x="352" y="222" text-anchor="middle" class="heading">⋮</text>
+      <rect x="0" y="240" width="75" height="38" rx="6" class="cell"/><text x="37" y="265" text-anchor="middle" class="label">31</text>
+      <rect x="115" y="240" width="125" height="38" rx="6" class="good1"/><text x="177" y="265" text-anchor="middle" class="mono">tile[31][0]</text>
+      <rect x="315" y="240" width="75" height="38" rx="6" class="good1"/><text x="352" y="265" text-anchor="middle" class="label">31</text>
+    </g>
+    <rect x="55" y="450" width="390" height="58" rx="10" fill="#edf8f4"/>
+    <text x="250" y="476" text-anchor="middle" class="heading" fill="#206a5d">33 mod 32 = 1</text>
+    <text x="250" y="498" text-anchor="middle" class="label">列访问依次覆盖全部 bank</text>
+  </g>
+</svg>

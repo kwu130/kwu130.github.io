@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Shared memory bank 访问模式</title>
+  <desc id="desc">比较连续访问、步长为二的访问和所有线程读取同一个地址时的 bank 映射。</desc>
+  <defs>
+    <style>
+      .title { font: 700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .heading { font: 700 21px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .label { font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334e68; }
+      .small { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #486581; }
+      .lane { fill: #e8f1f5; stroke: #8aa4b2; stroke-width: 1.5; }
+      .bank { fill: #e3f4ee; stroke: #2b7a78; stroke-width: 1.5; }
+      .conflict { fill: #ffe8e6; stroke: #d64545; stroke-width: 2; }
+      .broadcast { fill: #fff4d6; stroke: #c88912; stroke-width: 2; }
+      .arrow { stroke: #2b7a78; stroke-width: 2.5; fill: none; }
+      .arrow-conflict { stroke: #d64545; stroke-width: 2.5; fill: none; }
+      .arrow-broadcast { stroke: #c88912; stroke-width: 2.5; fill: none; }
+    </style>
+    <marker id="green-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2b7a78"/></marker>
+    <marker id="red-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d64545"/></marker>
+    <marker id="gold-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c88912"/></marker>
+  </defs>
+
+  <rect width="1200" height="680" fill="#fbfcfd"/>
+  <text x="600" y="48" text-anchor="middle" class="title">同一 warp 的三种 shared-memory 访问</text>
+
+  <g transform="translate(35 82)">
+    <rect width="350" height="550" rx="18" fill="#ffffff" stroke="#cbd5df"/>
+    <text x="175" y="40" text-anchor="middle" class="heading">stride = 1：无冲突</text>
+    <text x="175" y="67" text-anchor="middle" class="label">lane t → shared[t] → bank t</text>
+    <g transform="translate(42 105)">
+      <text x="0" y="-12" class="small">Lane</text>
+      <text x="230" y="-12" class="small">Bank</text>
+      <g>
+        <rect x="0" y="0" width="64" height="36" rx="6" class="lane"/><text x="32" y="24" text-anchor="middle" class="label">0</text>
+        <rect x="230" y="0" width="64" height="36" rx="6" class="bank"/><text x="262" y="24" text-anchor="middle" class="label">0</text>
+        <path d="M68 18 H224" class="arrow" marker-end="url(#green-arrow)"/>
+        <rect x="0" y="52" width="64" height="36" rx="6" class="lane"/><text x="32" y="76" text-anchor="middle" class="label">1</text>
+        <rect x="230" y="52" width="64" height="36" rx="6" class="bank"/><text x="262" y="76" text-anchor="middle" class="label">1</text>
+        <path d="M68 70 H224" class="arrow" marker-end="url(#green-arrow)"/>
+        <rect x="0" y="104" width="64" height="36" rx="6" class="lane"/><text x="32" y="128" text-anchor="middle" class="label">2</text>
+        <rect x="230" y="104" width="64" height="36" rx="6" class="bank"/><text x="262" y="128" text-anchor="middle" class="label">2</text>
+        <path d="M68 122 H224" class="arrow" marker-end="url(#green-arrow)"/>
+        <text x="32" y="177" text-anchor="middle" class="heading">⋮</text><text x="262" y="177" text-anchor="middle" class="heading">⋮</text>
+        <rect x="0" y="198" width="64" height="36" rx="6" class="lane"/><text x="32" y="222" text-anchor="middle" class="label">31</text>
+        <rect x="230" y="198" width="64" height="36" rx="6" class="bank"/><text x="262" y="222" text-anchor="middle" class="label">31</text>
+        <path d="M68 216 H224" class="arrow" marker-end="url(#green-arrow)"/>
+      </g>
+      <rect x="0" y="285" width="294" height="80" rx="10" fill="#edf8f4"/>
+      <text x="147" y="318" text-anchor="middle" class="heading" fill="#206a5d">32 个 bank 全部覆盖</text>
+      <text x="147" y="347" text-anchor="middle" class="label">一个 bank 一个地址</text>
+    </g>
+  </g>
+
+  <g transform="translate(425 82)">
+    <rect width="350" height="550" rx="18" fill="#ffffff" stroke="#cbd5df"/>
+    <text x="175" y="40" text-anchor="middle" class="heading">stride = 2：2-way conflict</text>
+    <text x="175" y="67" text-anchor="middle" class="label">bank(t) = (2t) mod 32</text>
+    <g transform="translate(42 105)">
+      <text x="0" y="-12" class="small">Lane</text>
+      <text x="230" y="-12" class="small">Bank</text>
+      <rect x="0" y="0" width="64" height="36" rx="6" class="lane"/><text x="32" y="24" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="52" width="64" height="36" rx="6" class="lane"/><text x="32" y="76" text-anchor="middle" class="label">16</text>
+      <rect x="230" y="26" width="64" height="42" rx="6" class="conflict"/><text x="262" y="53" text-anchor="middle" class="label">0</text>
+      <path d="M68 18 C145 18 160 42 224 45" class="arrow-conflict" marker-end="url(#red-arrow)"/>
+      <path d="M68 70 C145 70 160 52 224 49" class="arrow-conflict" marker-end="url(#red-arrow)"/>
+      <rect x="0" y="118" width="64" height="36" rx="6" class="lane"/><text x="32" y="142" text-anchor="middle" class="label">1</text>
+      <rect x="0" y="170" width="64" height="36" rx="6" class="lane"/><text x="32" y="194" text-anchor="middle" class="label">17</text>
+      <rect x="230" y="144" width="64" height="42" rx="6" class="conflict"/><text x="262" y="171" text-anchor="middle" class="label">2</text>
+      <path d="M68 136 C145 136 160 160 224 163" class="arrow-conflict" marker-end="url(#red-arrow)"/>
+      <path d="M68 188 C145 188 160 170 224 167" class="arrow-conflict" marker-end="url(#red-arrow)"/>
+      <text x="32" y="247" text-anchor="middle" class="heading">⋮</text><text x="262" y="247" text-anchor="middle" class="heading">⋮</text>
+      <rect x="0" y="285" width="294" height="80" rx="10" fill="#fff0ef"/>
+      <text x="147" y="318" text-anchor="middle" class="heading" fill="#a93636">只覆盖 16 个 bank</text>
+      <text x="147" y="347" text-anchor="middle" class="label">每个 bank 两个不同地址</text>
+    </g>
+  </g>
+
+  <g transform="translate(815 82)">
+    <rect width="350" height="550" rx="18" fill="#ffffff" stroke="#cbd5df"/>
+    <text x="175" y="40" text-anchor="middle" class="heading">同地址读取：Broadcast</text>
+    <text x="175" y="67" text-anchor="middle" class="label">所有 lane → shared[0]</text>
+    <g transform="translate(42 105)">
+      <text x="0" y="-12" class="small">Lane</text>
+      <text x="208" y="-12" class="small">Bank 0 / word 0</text>
+      <rect x="0" y="0" width="64" height="36" rx="6" class="lane"/><text x="32" y="24" text-anchor="middle" class="label">0</text>
+      <rect x="0" y="52" width="64" height="36" rx="6" class="lane"/><text x="32" y="76" text-anchor="middle" class="label">1</text>
+      <rect x="0" y="104" width="64" height="36" rx="6" class="lane"/><text x="32" y="128" text-anchor="middle" class="label">2</text>
+      <text x="32" y="177" text-anchor="middle" class="heading">⋮</text>
+      <rect x="0" y="198" width="64" height="36" rx="6" class="lane"/><text x="32" y="222" text-anchor="middle" class="label">31</text>
+      <rect x="220" y="82" width="80" height="70" rx="10" class="broadcast"/><text x="260" y="112" text-anchor="middle" class="label">bank 0</text><text x="260" y="136" text-anchor="middle" class="small">word 0</text>
+      <path d="M68 18 C150 18 165 92 214 103" class="arrow-broadcast" marker-end="url(#gold-arrow)"/>
+      <path d="M68 70 C150 70 165 103 214 111" class="arrow-broadcast" marker-end="url(#gold-arrow)"/>
+      <path d="M68 122 H214" class="arrow-broadcast" marker-end="url(#gold-arrow)"/>
+      <path d="M68 216 C150 216 165 147 214 132" class="arrow-broadcast" marker-end="url(#gold-arrow)"/>
+      <rect x="0" y="285" width="294" height="80" rx="10" fill="#fff7e3"/>
+      <text x="147" y="318" text-anchor="middle" class="heading" fill="#9a6700">读取一次，再广播</text>
+      <text x="147" y="347" text-anchor="middle" class="label">不是普通的 32-way conflict</text>
+    </g>
+  </g>
+</svg>
