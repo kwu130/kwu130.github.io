@@ -1,0 +1,123 @@
+:root {
+  --wukai-accent: #3f6772;
+  --wukai-ink: #273033;
+}
+
+body,
+.wy-body-for-nav {
+  color: var(--wukai-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.wy-side-nav-search {
+  background: #2f4650;
+}
+
+.wy-side-nav-search > a img.logo {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 0.65rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.wy-side-nav-search > a {
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.wy-menu-vertical header,
+.wy-menu-vertical p.caption {
+  color: #8fb8c2;
+}
+
+.wy-nav-content {
+  max-width: 920px;
+}
+
+.rst-content h1,
+.rst-content h2,
+.rst-content h3,
+.rst-content h4 {
+  color: #21343a;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rst-content h1 {
+  margin-bottom: 1.2rem;
+}
+
+.rst-content p,
+.rst-content li {
+  line-height: 1.78;
+}
+
+.rst-content a:not(.btn) {
+  color: var(--wukai-accent);
+}
+
+.rst-content code.literal {
+  border: 0;
+  border-radius: 3px;
+  color: #355f69;
+}
+
+.rst-content div[class^="highlight"] {
+  border-radius: 5px;
+}
+
+.rst-content table.docutils {
+  width: 100%;
+}
+
+.article-meta {
+  margin: -0.7rem 0 2rem;
+  color: #6d777b;
+  font-size: 0.9rem;
+}
+
+.article-meta span + span::before {
+  content: " · ";
+}
+
+.comments-section {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e1e4e5;
+}
+
+.load-comments {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--wukai-accent);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--wukai-accent);
+  cursor: pointer;
+}
+
+.load-comments:hover,
+.load-comments:focus-visible {
+  background: var(--wukai-accent);
+  color: #fff;
+}
+
+.load-comments:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.comments-root {
+  margin-top: 1rem;
+}
+
+@media screen and (max-width: 768px) {
+  .wy-nav-content-wrap {
+    background: #fff;
+  }
+
+  .wy-nav-content {
+    padding: 1.5rem;
+  }
+}

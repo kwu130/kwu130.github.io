@@ -1,6 +1,9 @@
+_build/
+.venv/
+__pycache__/
+# 迁移前的本地 Astro 构建缓存
 node_modules/
 dist/
 .astro/
 .DS_Store
-.npm-cache/
 *.log

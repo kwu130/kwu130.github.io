@@ -1,0 +1,62 @@
+{% extends "!layout.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <meta name="description" content="{{ (meta.description if meta and meta.description else 'C++、CUDA 与工程实践笔记')|striptags|e }}">
+  <meta property="og:site_name" content="Wukai’s Lab">
+  <meta property="og:title" content="{{ title|striptags|e }} — Wukai’s Lab">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://kwu130.github.io/og.png">
+  <link rel="alternate" type="application/rss+xml" title="Wukai’s Lab" href="{{ pathto('rss.xml', 1) }}">
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+  {% if pagename.startswith('posts/') %}
+  <section class="comments-section" aria-labelledby="comments-title">
+    <h2 id="comments-title">讨论</h2>
+    <p>评论存储在对应的 GitHub Issue 中。</p>
+    <button class="load-comments" type="button"
+      {% if meta and meta.issueNumber %}data-issue-number="{{ meta.issueNumber|e }}"{% endif %}>
+      加载评论
+    </button>
+    <div class="comments-root" aria-live="polite"></div>
+  </section>
+  <script>
+    (() => {
+      const section = document.querySelector('.comments-section');
+      const button = section?.querySelector('.load-comments');
+      const root = section?.querySelector('.comments-root');
+
+      button?.addEventListener('click', () => {
+        if (!root || root.dataset.loaded === 'true') return;
+
+        root.dataset.loaded = 'true';
+        button.disabled = true;
+        button.textContent = '正在加载…';
+
+        const script = document.createElement('script');
+        script.src = 'https://utteranc.es/client.js';
+        script.setAttribute('repo', 'kwu130/kwu130.github.io');
+        const issueNumber = button.dataset.issueNumber;
+        if (issueNumber) {
+          script.setAttribute('issue-number', issueNumber);
+        } else {
+          script.setAttribute('issue-term', 'pathname');
+        }
+        script.setAttribute('label', 'comment');
+        script.setAttribute('theme', 'github-light');
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        script.addEventListener('load', () => button.remove());
+        script.addEventListener('error', () => {
+          button.disabled = false;
+          button.textContent = '加载失败，点击重试';
+          root.dataset.loaded = 'false';
+        });
+        root.appendChild(script);
+      });
+    })();
+  </script>
+  {% endif %}
+{% endblock %}
