@@ -10,13 +10,20 @@
 (topic-cuda)=
 ## CUDA
 
+- {doc}`posts/nvls`
 - {doc}`posts/cuda-shared-memory-bank-conflicts`
 - {doc}`posts/cuda-device-long-double`
+
+(topic-collective-communication)=
+## 集合通信
+
+- {doc}`posts/nvls`
 
 (topic-performance-optimization)=
 ## 性能优化
 
 - {doc}`posts/cuda-shared-memory-bank-conflicts`
+- {doc}`posts/nvls`
 
 (topic-debugging)=
 ## 调试

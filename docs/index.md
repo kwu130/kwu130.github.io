@@ -16,6 +16,7 @@ posts/valgrind-memcheck
 :maxdepth: 1
 :caption: CUDA
 
+posts/nvls
 posts/cuda-shared-memory-bank-conflicts
 posts/cuda-device-long-double
 ```
