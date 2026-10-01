@@ -4,6 +4,7 @@
 (topic-cpp)=
 ## C/C++
 
+- {doc}`posts/ld-preload-profiler`
 - {doc}`posts/valgrind-memcheck`
 - {doc}`posts/cuda-device-long-double`
 
@@ -22,12 +23,14 @@
 (topic-performance-optimization)=
 ## 性能优化
 
+- {doc}`posts/ld-preload-profiler`
 - {doc}`posts/cuda-shared-memory-bank-conflicts`
 - {doc}`posts/nvls`
 
 (topic-debugging)=
 ## 调试
 
+- {doc}`posts/ld-preload-profiler`
 - {doc}`posts/valgrind-memcheck`
 
 (topic-developer-tools)=

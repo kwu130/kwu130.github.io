@@ -10,6 +10,7 @@ C++、CUDA 与工程实践笔记。
 :caption: C/C++ 与调试
 
 posts/valgrind-memcheck
+posts/ld-preload-profiler
 ```
 
 ```{toctree}
