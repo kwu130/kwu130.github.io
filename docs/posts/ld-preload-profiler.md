@@ -27,6 +27,23 @@ Linux 的 `LD_PRELOAD` 为这种实验提供了一个入口。应用仍然调用
 | `libdemo.so` | `demo.cpp`、`demo.h` | 提供 `demoAdd` 和原始实现别名 `pdemoAdd` |
 | `libprofiler.so` | `profiler.cpp`、`demo.h` | 拦截 `demoAdd`，记录耗时后返回结果 |
 
+`main.cpp` 中的业务调用很直接。下面省略了命令行参数解析和最终打印，只保留调用循环：
+
+```cpp
+std::uint64_t checksum = 0;
+int ret = 0;
+for (unsigned int i = 0; i < iterations; ++i) {
+    ret = demoAdd(10, 20);
+    if (ret != 30) {
+        std::fprintf(stderr, "unexpected result: %d\n", ret);
+        return 1;
+    }
+    checksum += static_cast<std::uint64_t>(ret);
+}
+```
+
+应用只知道 `demoAdd`，没有引用 profiler，也没有调用 `pdemoAdd`。`checksum` 则让我们能从运行结果检查每次返回值的累加是否正确。
+
 两种运行方式对应两条调用路径：
 
 ```text
@@ -125,7 +142,39 @@ extern "C" {
 }
 ```
 
-业务库通过 `PROFAPI` 控制是否导出原始入口。开启后，`DEMO_API(int, demoAdd, int a, int b)` 的关键展开结果如下，省略了函数体中的日志：
+### 业务库如何生成两个入口
+
+`demo.cpp` 中的 `DEMO_API` 宏根据 `PROFAPI` 选择导出方式。省略平台检查后，宏定义如下：
+
+```cpp
+#ifdef PROFAPI
+#define DEMO_API(ret, func, ...)                                  \
+    extern "C" __attribute__((visibility("default")))             \
+        __attribute__((alias(#func))) ret p##func(__VA_ARGS__);  \
+    extern "C" __attribute__((visibility("default")))             \
+        __attribute__((weak)) ret func(__VA_ARGS__)
+#else
+#define DEMO_API(ret, func, ...)                                  \
+    extern "C" __attribute__((visibility("default")))             \
+        ret func(__VA_ARGS__)
+#endif
+```
+
+`p##func` 把前缀 `p` 与函数名拼接，生成 `pdemoAdd`；`#func` 把函数名转成字符串 `"demoAdd"`，传给 alias 属性。`__VA_ARGS__` 则保留函数参数列表。
+
+实际函数体只写一次：
+
+```cpp
+DEMO_API(int, demoAdd, int a, int b) {
+    static const bool trace = std::getenv("DEMO_QUIET") == nullptr;
+    if (trace) {
+        std::printf("[libdemo] original demoAdd(%d, %d)\n", a, b);
+    }
+    return a + b;
+}
+```
+
+开启 `PROFAPI` 后，这段声明的关键展开结果如下，省略了函数体中的日志：
 
 ```cpp
 extern "C"
@@ -151,11 +200,19 @@ int demoAdd(int a, int b) {
 
 `pdemoAdd` 是符号别名，不是另一个转发函数。GCC 要求 alias 与目标在同一翻译单元中定义，并且类型一致；wrapper 与业务库也必须保持接口签名和 ABI 一致。具体约束可参考 [GCC 函数属性文档](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html)。
 
-于是，wrapper 可以这样转交调用：
+### wrapper 如何调用原始实现
+
+忽略日志、计时与统计后，`profiler.cpp` 中包装函数的最小结构如下：
 
 ```cpp
-const int ret = pdemoAdd(a, b);
+extern "C" __attribute__((visibility("default")))
+int demoAdd(int a, int b) {
+    const int ret = pdemoAdd(a, b);
+    return ret;
+}
 ```
+
+它导出应用要找的同名 `demoAdd`，内部通过 `pdemoAdd` 执行业务逻辑，再把返回值交还应用。后面的计时和统计代码就插在这个调用前后。
 
 如果在 wrapper 内再次调用 `demoAdd(a, b)`，就会重新进入自己，造成递归。另一个符号名使 profiler 能够引用业务库里的原始函数体。
 
@@ -196,6 +253,38 @@ DEMO_QUIET=1 LD_BIND_NOW=1 \
 `DEMO_QUIET` 关闭业务库和 profiler 的逐次日志，只保留应用开始、应用结果与 profiler 汇总三行。该变量按是否存在判断，设置成 `0` 也会关闭日志，并且在首次调用时读取后缓存。
 
 `LD_BIND_NOW=1` 把动态符号的懒绑定提前到启动阶段，减少首次被测调用中的解析影响。它不会消除其他初始化、缓存或调度成本。[ld.so 手册](https://man7.org/linux/man-pages/man8/ld.so.8.html)说明了这一开关。
+
+### 每次调用如何累计统计
+
+`profiler.cpp` 用一个 `Statistics` 对象保存累计结果。下面保留字段与初值，省略退出时打印报告的析构函数：
+
+```cpp
+struct Statistics {
+    std::uint64_t calls = 0;
+    std::uint64_t total_ns = 0;
+    std::uint64_t min_ns = std::numeric_limits<std::uint64_t>::max();
+    std::uint64_t max_ns = 0;
+
+    // 析构汇总逻辑省略。
+};
+
+Statistics statistics;
+```
+
+`min_ns` 从可表示的最大值开始，保证第一次测量就能更新它。每次原始调用返回、结束计时后，wrapper 执行下面这段更新：
+
+```cpp
+++statistics.calls;
+statistics.total_ns += elapsed;
+if (elapsed < statistics.min_ns) {
+    statistics.min_ns = elapsed;
+}
+if (elapsed > statistics.max_ns) {
+    statistics.max_ns = elapsed;
+}
+```
+
+这些操作位于计时区间之外。正常退出时，完整源码中的 `Statistics` 析构函数先检查 `calls` 是否为零，再按 `total_ns / calls` 计算平均值并打印一条汇总。
 
 ### 怎样解读统计字段
 
