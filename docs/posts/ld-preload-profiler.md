@@ -43,11 +43,27 @@ app ── demoAdd ──> libprofiler.so
 
 这里最重要的问题是：wrapper 也叫 `demoAdd`，它该怎样调用原来的 `demoAdd`，而不是再次进入自己？本例通过额外导出的函数别名 `pdemoAdd` 解决这个问题。
 
+## 源码下载
+
+本文的完整示例代码可以从下面两个入口获取：
+
+- **[下载完整源码包（test_profiler.zip）](https://kwu130.github.io/_static/downloads/test_profiler.zip)**：包含应用、业务库、profiler、CMake 构建配置、验证脚本和使用说明。
+- **[在 GitHub 查看源码](https://github.com/kwu130/kwu130.github.io/tree/main/examples/test_profiler)**：源码位于文档站仓库的 `examples/test_profiler/` 目录。
+
+下载 ZIP 后解压，进入 `test_profiler/` 目录，再执行下文的编译命令。也可以在终端直接下载：
+
+```bash
+curl -fL https://kwu130.github.io/_static/downloads/test_profiler.zip \
+  -o test_profiler.zip
+unzip test_profiler.zip
+cd test_profiler
+```
+
 ## 先编译运行，观察调用链
 
 实验使用 **Linux / ELF、GCC 或 Clang，以及 C++17**。CMake 构建要求 3.20+；验证脚本还需要 Bash、Python 3 和 GNU binutils。macOS 使用 Mach-O，需要在 Linux 虚拟机或容器中运行本例。
 
-下载 {download}`完整 demo 源码 <../_static/downloads/test_profiler.zip>`，解压后进入 `test_profiler/`。Debian / Ubuntu 可以这样准备环境和构建：
+在解压后的 `test_profiler/` 目录中，Debian / Ubuntu 可以这样准备环境和构建：
 
 ```bash
 sudo apt update
